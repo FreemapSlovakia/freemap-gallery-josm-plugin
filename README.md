@@ -1,19 +1,17 @@
 # Freemap.sk Gallery JOSM Plugin
 
-Quickly hacked JSOM plugin to show pictures from freemap.sk.
+JOSM plugin to show pictures from the freemap.sk gallery.
 
 ## Building
-
-First modify paths in [build.xml](./build.xml) file (`/home/martin/...`) and then run
 
 ```sh
 ant clean jar
 ```
 
+It compiles against `~/josm-tested.jar` by default; pass `-Djosm.jar=/path/to/josm.jar` to use another one.
+
+After changing the version in [build.xml](./build.xml), copy the manifest of the built jar into [plugin.txt](./plugin.txt) (each line indented with a tab), as JOSM reads update information from there.
+
 ## Usage
 
-After the plugin is compiled to the correct place then run JOSM and enable it in _Edit / Preferences / Plugins_; search for _freemap-gallery_. Activate the layer with _Imagery / Freemap Gallery_. Images will be visible from the zoom 14 and will be loaded dynamically on map view change.
-
-## Known issues
-
-This is a quick and dirty implementation. If you get exception when using this plugin then just suppress it for the session.
+Copy `freemap-gallery.jar` to the JOSM plugins directory (or add `https://github.com/FreemapSlovakia/fm-gallery-josm-plugin/raw/main/plugin.txt` as a plugin site), then run JOSM and enable it in _Edit / Preferences / Plugins_; search for _freemap-gallery_. Activate the layer with _Imagery / Freemap Gallery_. Images will be visible from the zoom 14 and will be loaded dynamically on map view change.

@@ -1,10 +1,12 @@
 <project default="compile">
+  <property name="josm.jar" location="${user.home}/josm-tested.jar" />
+
   <target name="compile">
     <mkdir dir="bin" />
 
-    <javac srcdir="src" destdir="bin">
+    <javac srcdir="src" destdir="bin" release="17" includeantruntime="false">
       <classpath>
-        <pathelement path="/home/martin/josm-tested.jar" />
+        <pathelement path="${josm.jar}" />
       </classpath>
     </javac>
   </target>
@@ -21,15 +23,15 @@
       </fileset>
 
       <manifest>
-        <attribute name="Plugin-Mainversion" value="18494" />
-        <attribute name="Plugin-Version" value="1" />
+        <attribute name="Plugin-Mainversion" value="18723" />
+        <attribute name="Plugin-Version" value="2" />
         <attribute name="Plugin-Class" value="sk.freemap.josm.plugins.gallery.FreemapGalleryPlugin" />
         <attribute name="Plugin-Description"
           value="Adds dynamic Freemap.sk Gallery layer to Imagery to view photos from zoom 14" />
         <attribute name="Author" value="Martin Ždila &lt;m.zdila@gmail.com&gt;" />
         <attribute name="Plugin-Minimum-Java-Version" value="17" />
         <attribute name="Plugin-Link"
-          value="https://github.com/FreemapSlovakia/freemap-gallery-josm-plugin/" />
+          value="https://github.com/FreemapSlovakia/fm-gallery-josm-plugin/" />
         <attribute name="Plugin-Icon" value="images/icon.svg" />
       </manifest>
     </jar>

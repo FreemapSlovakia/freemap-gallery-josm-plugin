@@ -3,83 +3,96 @@ package sk.freemap.josm.plugins.gallery;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.layer.geoimage.ImageEntry;
-import org.openstreetmap.josm.tools.JosmRuntimeException;
 
 public class GalleryImageEntry extends ImageEntry {
     private static final String PHOTO_URL_TEMPLATE = "https://backend.freemap.sk/gallery/pictures/%d/image";
 
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+            .withZone(ZoneId.systemDefault());
+
     private final int id;
 
-    private String user;
+    private final String user;
 
-    private Long takenAt;
+    private final String title;
 
-    private String title;
-
-    GalleryImageEntry(int id, String title, String user, Long takenAt, LatLon latLon) {
+    GalleryImageEntry(int id, String title, String user, Instant takenAt, LatLon latLon) {
         this.id = id;
         this.title = title;
         this.user = user;
-        this.takenAt = takenAt;
 
         setPos(latLon);
+
+        if (takenAt != null) {
+            setExifTime(takenAt);
+        }
+    }
+
+    int getId() {
+        return id;
     }
 
     @Override
     protected URL getImageUrl() throws MalformedURLException {
-        return new URL(String.format(PHOTO_URL_TEMPLATE, id));
+        return getImageURI().toURL();
     }
 
     @Override
     public URI getImageURI() {
-        try {
-            return new URI(String.format(PHOTO_URL_TEMPLATE, id));
-        } catch (URISyntaxException e) {
-            // This should never happen.
-            throw new JosmRuntimeException(this.toString(), e);
-        }
+        return URI.create(String.format(PHOTO_URL_TEMPLATE, id));
     }
 
     @Override
     public String getDisplayName() {
-        return (title == null ? "Photo" : title) + " by " + user
-                + (takenAt == null ? "" : (" taken at " + new Date(takenAt * 1000L)));
+        Instant takenAt = getExifInstant();
+
+        return (title == null ? "Photo" : title) + (user == null ? "" : " by " + user)
+                + (takenAt == null ? "" : " taken at " + DATE_FORMAT.format(takenAt));
+    }
+
+    boolean hasSameData(GalleryImageEntry other) {
+        return Objects.equals(title, other.title) && Objects.equals(user, other.user)
+                && Objects.equals(getExifInstant(), other.getExifInstant()) && Objects.equals(getPos(), other.getPos());
     }
 
     @Override
     public String toString() {
-        return "Iamge:" + id;
+        return "Image:" + id;
     }
 
+    // The inherited equals compares mutable state such as the loaded thumbnail.
     @Override
     public int hashCode() {
-        return 31 * super.hashCode() + Objects.hash(id);
+        return Integer.hashCode(id);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
+        return obj instanceof GalleryImageEntry other && id == other.id;
+    }
 
-        if (!super.equals(obj) || getClass() != obj.getClass()) {
-            return false;
-        }
+    // ImageData.mergeFrom de-duplicates by file and ThumbsLoader keys its cache by it, so it must be non-null and unique.
+    @Override
+    public File getFile() {
+        return new File("freemap-gallery", id + ".jpg");
+    }
 
-        GalleryImageEntry other = (GalleryImageEntry) obj;
-
-        return id == other.id;
+    // Photos are reloaded with the view, so removing one from the layer would not last.
+    @Override
+    public boolean isRemoveSupported() {
+        return false;
     }
 
     @Override
-    public File getFile() {
-        return new File("/_josm_fm_/" + id);
+    public boolean isDeleteSupported() {
+        return false;
     }
 }
