@@ -3,7 +3,7 @@ freemap-gallery.jar;https://github.com/FreemapSlovakia/fm-gallery-josm-plugin/ra
 	Ant-Version: Apache Ant 1.10.18
 	Created-By: 21.0.13-ea+8-1-Debian (Debian)
 	Plugin-Mainversion: 18723
-	Plugin-Version: 2
+	Plugin-Version: 3
 	Plugin-Class: sk.freemap.josm.plugins.gallery.FreemapGalleryPlugin
 	Plugin-Description: Adds dynamic Freemap.sk Gallery layer to Imagery to view photos from zoom 14
 	Author: Martin Ždila <m.zdila@gmail.com>

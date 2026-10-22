@@ -10,7 +10,7 @@ ant clean jar
 
 It compiles against `~/josm-tested.jar` by default; pass `-Djosm.jar=/path/to/josm.jar` to use another one.
 
-After changing the version in [build.xml](./build.xml), copy the manifest of the built jar into [plugin.txt](./plugin.txt) (each line indented with a tab), as JOSM reads update information from there.
+The build also writes [plugin.txt](./plugin.txt) from the jar's manifest; JOSM reads update information from there, so commit it together with the jar after bumping `Plugin-Version` in [build.xml](./build.xml).
 
 ## Usage
 

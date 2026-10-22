@@ -24,7 +24,7 @@
 
       <manifest>
         <attribute name="Plugin-Mainversion" value="18723" />
-        <attribute name="Plugin-Version" value="2" />
+        <attribute name="Plugin-Version" value="3" />
         <attribute name="Plugin-Class" value="sk.freemap.josm.plugins.gallery.FreemapGalleryPlugin" />
         <attribute name="Plugin-Description"
           value="Adds dynamic Freemap.sk Gallery layer to Imagery to view photos from zoom 14" />
@@ -35,5 +35,22 @@
         <attribute name="Plugin-Icon" value="images/icon.svg" />
       </manifest>
     </jar>
+
+    <!-- JOSM reads update information from plugin.txt: the download URL followed by the jar's manifest, tab-indented. -->
+    <loadresource property="plugin.manifest">
+      <zipentry zipfile="freemap-gallery.jar" name="META-INF/MANIFEST.MF" />
+      <filterchain>
+        <tokenfilter>
+          <filetokenizer />
+          <replaceregex pattern="\r?\n " replace="" flags="g" />
+        </tokenfilter>
+        <fixcrlf eol="lf" />
+        <ignoreblank />
+        <prefixlines prefix="&#9;" />
+      </filterchain>
+    </loadresource>
+
+    <echo file="plugin.txt" encoding="UTF-8">freemap-gallery.jar;https://github.com/FreemapSlovakia/fm-gallery-josm-plugin/raw/main/freemap-gallery.jar
+${plugin.manifest}</echo>
   </target>
 </project>

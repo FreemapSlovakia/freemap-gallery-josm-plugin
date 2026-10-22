@@ -24,10 +24,14 @@ public class GalleryImageEntry extends ImageEntry {
 
     private final String title;
 
+    // Kept apart from getPos(): its CachedLatLon also compares the lazily cached east/north in equals.
+    private final LatLon latLon;
+
     GalleryImageEntry(int id, String title, String user, Instant takenAt, LatLon latLon) {
         this.id = id;
         this.title = title;
         this.user = user;
+        this.latLon = latLon;
 
         setPos(latLon);
 
@@ -60,7 +64,7 @@ public class GalleryImageEntry extends ImageEntry {
 
     boolean hasSameData(GalleryImageEntry other) {
         return Objects.equals(title, other.title) && Objects.equals(user, other.user)
-                && Objects.equals(getExifInstant(), other.getExifInstant()) && Objects.equals(getPos(), other.getPos());
+                && Objects.equals(getExifInstant(), other.getExifInstant()) && Objects.equals(latLon, other.latLon);
     }
 
     @Override
