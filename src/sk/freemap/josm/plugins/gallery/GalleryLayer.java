@@ -2,6 +2,7 @@ package sk.freemap.josm.plugins.gallery;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ import org.openstreetmap.josm.gui.layer.geoimage.ImageEntry;
 import org.openstreetmap.josm.gui.layer.geoimage.ImageViewerDialog;
 import org.openstreetmap.josm.gui.layer.geoimage.ThumbsLoader;
 import org.openstreetmap.josm.gui.util.GuiHelper;
+import org.openstreetmap.josm.spi.preferences.Config;
 import org.openstreetmap.josm.tools.HttpClient;
 import org.openstreetmap.josm.tools.Logging;
 
@@ -56,6 +58,9 @@ public class GalleryLayer extends GeoImageLayer {
 
     // Ground resolution of web mercator zoom 0 at the equator.
     private static final double ZOOM_0_METERS_PER_PIXEL = 156543.03;
+
+    // A Freemap.sk access token with the gallery:read scope; gives premium users their premium photos.
+    private static final String TOKEN_PREF = "freemap.gallery.token";
 
     private static final ExecutorService FETCH_EXECUTOR = Executors.newSingleThreadExecutor(r -> newDaemonThread(r, "freemap-gallery"));
 
@@ -83,6 +88,19 @@ public class GalleryLayer extends GeoImageLayer {
                 refreshTimer.restart();
             }
         });
+    }
+
+    static HttpClient createRequest(URL url) {
+        HttpClient client = HttpClient.create(url);
+
+        String token = Config.getPref().get(TOKEN_PREF, "").strip();
+
+        // A header rather than ?authToken=, which JOSM would log with the URL.
+        if (!token.isEmpty()) {
+            client.setHeader("Authorization", "Bearer " + token);
+        }
+
+        return client;
     }
 
     private static Thread newDaemonThread(Runnable r, String name) {
@@ -235,7 +253,7 @@ public class GalleryLayer extends GeoImageLayer {
         String url = String.format(Locale.US, API_URL_TEMPLATE, bounds.getMinLon(), bounds.getMinLat(),
                 bounds.getMaxLon(), bounds.getMaxLat());
 
-        HttpClient client = HttpClient.create(URI.create(url).toURL());
+        HttpClient client = createRequest(URI.create(url).toURL());
 
         activeRequest = client;
 

@@ -1,16 +1,28 @@
 package sk.freemap.josm.plugins.gallery;
 
+import java.awt.Dimension;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Iterator;
 import java.util.Objects;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.layer.geoimage.ImageEntry;
+import org.openstreetmap.josm.gui.layer.geoimage.ImageUtils;
+import org.openstreetmap.josm.tools.HttpClient;
 
 public class GalleryImageEntry extends ImageEntry {
     private static final String PHOTO_URL_TEMPLATE = "https://backend.freemap.sk/gallery/pictures/%d/image";
@@ -52,6 +64,41 @@ public class GalleryImageEntry extends ImageEntry {
     @Override
     public URI getImageURI() {
         return URI.create(String.format(PHOTO_URL_TEMPLATE, id));
+    }
+
+    // Downloads the photo itself, as JOSM's own loader cannot send the access token.
+    @Override
+    public BufferedImage read(Dimension target) throws IOException {
+        HttpClient.Response response = GalleryLayer.createRequest(getImageUrl()).connect();
+
+        if (response.getResponseCode() != 200) {
+            response.disconnect();
+
+            throw new IOException("HTTP " + response.getResponseCode() + " " + response.getResponseMessage());
+        }
+
+        // Closing the stream instead of disconnecting keeps the connection alive for the next photo.
+        try (InputStream content = response.getContent();
+                ImageInputStream input = ImageIO.createImageInputStream(content)) {
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
+
+            if (!readers.hasNext()) {
+                throw new IOException("Unsupported image format");
+            }
+
+            ImageReader reader = readers.next();
+
+            try {
+                reader.setInput(input, true, true);
+
+                ImageReadParam param = target == null ? reader.getDefaultReadParam()
+                        : ImageUtils.withSubsampling(reader, target);
+
+                return ImageUtils.applyExifRotation(reader.read(0, param), getExifOrientation());
+            } finally {
+                reader.dispose();
+            }
+        }
     }
 
     @Override

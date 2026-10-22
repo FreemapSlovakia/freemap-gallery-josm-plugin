@@ -24,7 +24,7 @@
 
       <manifest>
         <attribute name="Plugin-Mainversion" value="18723" />
-        <attribute name="Plugin-Version" value="3" />
+        <attribute name="Plugin-Version" value="4" />
         <attribute name="Plugin-Class" value="sk.freemap.josm.plugins.gallery.FreemapGalleryPlugin" />
         <attribute name="Plugin-Description"
           value="Adds dynamic Freemap.sk Gallery layer to Imagery to view photos from zoom 14" />
