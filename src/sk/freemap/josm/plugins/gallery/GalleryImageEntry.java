@@ -23,6 +23,7 @@ import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.layer.geoimage.ImageEntry;
 import org.openstreetmap.josm.gui.layer.geoimage.ImageUtils;
 import org.openstreetmap.josm.tools.HttpClient;
+import org.openstreetmap.josm.tools.Logging;
 
 public class GalleryImageEntry extends ImageEntry {
     private static final String PHOTO_URL_TEMPLATE = "https://backend.freemap.sk/gallery/pictures/%d/image";
@@ -38,6 +39,9 @@ public class GalleryImageEntry extends ImageEntry {
 
     // Kept apart from getPos(): its CachedLatLon also compares the lazily cached east/north in equals.
     private final LatLon latLon;
+
+    // Set when the backend refused the photo as premium; shown in the viewer's error message.
+    private volatile boolean premiumRefused;
 
     GalleryImageEntry(int id, String title, String user, Instant takenAt, LatLon latLon) {
         this.id = id;
@@ -71,10 +75,18 @@ public class GalleryImageEntry extends ImageEntry {
     public BufferedImage read(Dimension target) throws IOException {
         HttpClient.Response response = GalleryLayer.createRequest(getImageUrl()).connect();
 
-        if (response.getResponseCode() != 200) {
+        int code = response.getResponseCode();
+
+        premiumRefused = code == 402;
+
+        // Returning null rather than throwing: on an exception the viewer keeps showing "Loading" instead of the error.
+        if (code != 200) {
             response.disconnect();
 
-            throw new IOException("HTTP " + response.getResponseCode() + " " + response.getResponseMessage());
+            Logging.warn("Freemap Gallery: unable to load photo " + id + ": HTTP " + code + " "
+                    + response.getResponseMessage());
+
+            return null;
         }
 
         // Closing the stream instead of disconnecting keeps the connection alive for the next photo.
@@ -106,7 +118,8 @@ public class GalleryImageEntry extends ImageEntry {
         Instant takenAt = getExifInstant();
 
         return (title == null ? "Photo" : title) + (user == null ? "" : " by " + user)
-                + (takenAt == null ? "" : " taken at " + DATE_FORMAT.format(takenAt));
+                + (takenAt == null ? "" : " taken at " + DATE_FORMAT.format(takenAt))
+                + (premiumRefused ? " (premium photo; set freemap.gallery.token to a Freemap.sk access token)" : "");
     }
 
     boolean hasSameData(GalleryImageEntry other) {
